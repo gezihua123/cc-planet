@@ -8,6 +8,7 @@ REMOTE="origin"
 BRANCH="main"
 DEFAULT_BUMP="patch"
 REPO="gezihua123/cc-planet"
+VERSION_FILE="version.properties"
 
 # --- 颜色 ---
 RED='\033[0;31m'
@@ -56,15 +57,15 @@ if ! git remote get-url "$REMOTE" &>/dev/null; then
     exit 1
 fi
 
-# --- 版本号 ---
-LATEST_TAG=$(git tag --sort=-v:refname | head -n 1)
-if [[ -z "$LATEST_TAG" ]]; then
-    echo -e "${YELLOW}⚠️  没有找到已有 tag，从 v0.0.0 开始${NC}"
-    LATEST_TAG="v0.0.0"
+# --- 从 version.properties 读取版本号 ---
+if [[ ! -f "$VERSION_FILE" ]]; then
+    echo -e "${RED}❌ $VERSION_FILE 不存在${NC}"
+    exit 1
 fi
-echo -e "   最新 tag: ${CYAN}$LATEST_TAG${NC}"
 
-VERSION="${LATEST_TAG#v}"
+source "$VERSION_FILE"
+echo -e "   当前版本: ${CYAN}v$VERSION${NC}"
+
 IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
 
 case "$BUMP" in
@@ -74,7 +75,13 @@ case "$BUMP" in
     *) echo -e "${RED}❌ 无效 bump_type: $BUMP（可选: major / minor / patch）${NC}"; exit 1 ;;
 esac
 
-NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+NEW_TAG="v${NEW_VERSION}"
+
+# --- 更新 version.properties ---
+echo -e "${CYAN}📝 更新 $VERSION_FILE ...${NC}"
+echo "VERSION=$NEW_VERSION" > "$VERSION_FILE"
+echo -e "   ${GREEN}✓${NC} $VERSION_FILE: ${CYAN}$NEW_VERSION${NC}"
 
 # --- 构建 ---
 echo -e "${CYAN}🔨 构建项目...${NC}"
@@ -89,7 +96,6 @@ PKG_DIR=$(mktemp -d)
 PKG_DIR="${PKG_DIR}/${PKG_NAME}"
 mkdir -p "$PKG_DIR"
 
-# 需要打包的文件清单
 FILES_TO_PACK=(
     "cc-planet"
     "env.json"
@@ -98,6 +104,7 @@ FILES_TO_PACK=(
     "README.md"
     "SKILL.md"
     "install_pkg.sh"
+    "version.properties"
 )
 
 for file in "${FILES_TO_PACK[@]}"; do
@@ -109,7 +116,6 @@ for file in "${FILES_TO_PACK[@]}"; do
     fi
 done
 
-# 打包
 TARBALL="${PKG_NAME}.tar.gz"
 tar -C "$(dirname "$PKG_DIR")" -czf "$TARBALL" "$PKG_NAME"
 
@@ -137,6 +143,7 @@ cat > "$RELEASE_NOTES" <<-EOF
 ### 构建信息
 - 平台: macOS 11+
 - 架构: arm64 + x86_64 (Universal Binary)
+- 版本文件: \`version.properties\`
 
 ### 包含文件
 | 文件 | 说明 |
@@ -146,21 +153,20 @@ cat > "$RELEASE_NOTES" <<-EOF
 | \`cc-notify.py\` | CI/CD 通知辅助脚本 |
 | \`plane.png\` | 飞机图片源文件 |
 | \`README.md\` | 使用文档 |
+| \`SKILL.md\` | 技能文档 |
+| \`install_pkg.sh\` | 安装脚本 |
+| \`version.properties\` | 版本号配置 |
 
 ### 快速安装
 \`\`\`bash
-# 下载完整包
-curl -fsSL https://github.com/$REPO/releases/download/$NEW_TAG/$TARBALL | tar -xz
+# 本地安装
+curl -fsSL https://raw.githubusercontent.com/$REPO/main/install_pkg.sh | bash
 
-# 进入目录
-cd $PKG_NAME
-
-# 运行
-./cc-planet "Hello World"
+# 全局安装
+curl -fsSL https://raw.githubusercontent.com/$REPO/main/install_pkg.sh | bash -s -- --global
 \`\`\`
 EOF
 
-# 上传 tarball
 if gh release create "$NEW_TAG" \
     --title "$NEW_TAG" \
     --notes-file "$RELEASE_NOTES" \
@@ -193,4 +199,4 @@ echo -e "${GREEN}   代码已推送到 $REMOTE/$BRANCH${NC}"
 echo -e "${GREEN}   产物已上传至 GitHub Release${NC}"
 echo ""
 echo -e "   安装命令:"
-echo -e "   ${CYAN}curl -fsSL https://github.com/$REPO/releases/download/$NEW_TAG/$TARBALL | tar -xz${NC}"
+echo -e "   ${CYAN}curl -fsSL https://raw.githubusercontent.com/$REPO/main/install_pkg.sh | bash${NC}"
