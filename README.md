@@ -7,10 +7,14 @@
 ### 方式一：安装脚本（推荐）
 
 ```bash
+# 安装到 ~/.local/bin/cc-planet（无需 sudo）
 curl -fsSL https://raw.githubusercontent.com/gezihua123/cc-planet/main/install_pkg.sh | bash
+
+# 安装到 /usr/local/bin/cc-planet（全局，使用 sudo）
+curl -fsSL https://raw.githubusercontent.com/gezihua123/cc-planet/main/install_pkg.sh | bash -s -- --global
 ```
 
-脚本会自动下载最新 Release 并安装到 `~/bin/cc-plane/`，无需 sudo。
+脚本会自动下载最新 Release 二进制并安装。支持 `--global` 参数切换安装路径。
 
 ### 方式二：手动下载
 

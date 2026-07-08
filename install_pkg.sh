@@ -4,7 +4,6 @@ set -e
 # --- 配置 ---
 REPO="gezihua123/cc-planet"
 BINARY="cc-planet"
-INSTALL_BASE="${HOME}/bin/cc-plane"   # cc-notify.py 约定的路径
 DOWNLOAD_BASE="https://github.com/${REPO}/releases/download"
 DEFAULT_VERSION="v0.0.4"              # 发布时自动更新，API 不可用时回退
 
@@ -17,20 +16,45 @@ NC='\033[0m'
 
 # --- 帮助 ---
 usage() {
-    echo "用法: ./install_pkg.sh [版本号]"
+    echo "用法: curl -fsSL https://raw.githubusercontent.com/$REPO/main/install_pkg.sh | bash"
+    echo "  或: ./install_pkg.sh [选项] [版本号]"
     echo ""
-    echo "从 GitHub Releases 下载并安装 cc-planet 及配套资源"
+    echo "从 GitHub Releases 下载并安装 $BINARY"
+    echo ""
+    echo "选项:"
+    echo "  --global    安装到 /usr/local/bin/（全局，使用 sudo）"
+    echo "  -h, --help  显示帮助"
     echo ""
     echo "参数:"
-    echo "  版本号    可选，默认安装最新版"
+    echo "  版本号    可选，指定版本（如 v0.0.4），默认最新版"
     echo ""
     echo "示例:"
-    echo "  ./install_pkg.sh           # 安装最新版"
-    echo "  ./install_pkg.sh v0.0.2    # 安装指定版本"
+    echo "  ./install_pkg.sh                # 安装到 ~/.local/bin/"
+    echo "  ./install_pkg.sh --global       # 安装到 /usr/local/bin/"
+    echo "  ./install_pkg.sh v0.0.3         # 安装指定版本到 ~/.local/bin/"
+    echo "  ./install_pkg.sh --global v0.0.3"
     exit 0
 }
 
-[[ "$1" == "-h" || "$1" == "--help" ]] && usage
+# --- 解析参数 ---
+GLOBAL=false
+TAG=""
+
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help) usage ;;
+        --global) GLOBAL=true ;;
+        v*) TAG="$arg" ;;
+    esac
+done
+
+if [[ "$GLOBAL" == "true" ]]; then
+    INSTALL_PATH="/usr/local/bin/$BINARY"
+    SUDO="sudo"
+else
+    INSTALL_PATH="${HOME}/.local/bin/$BINARY"
+    SUDO=""
+fi
 
 # --- 系统检查 ---
 echo -e "${CYAN}🔍 检查系统...${NC}"
@@ -40,10 +64,7 @@ if [[ "$OS" != "Darwin" ]]; then
 fi
 
 # --- 确定版本 ---
-if [[ -n "$1" ]]; then
-    TAG="$1"
-    echo -e "   指定版本: ${CYAN}$TAG${NC}"
-else
+if [[ -z "$TAG" ]]; then
     echo -e "   获取最新版本..."
     TAG=$(curl -fsSL --connect-timeout 5 "https://api.github.com/repos/$REPO/releases/latest" \
         | grep '"tag_name"' \
@@ -54,13 +75,14 @@ else
     else
         echo -e "   最新版本: ${CYAN}$TAG${NC}"
     fi
+else
+    echo -e "   指定版本: ${CYAN}$TAG${NC}"
 fi
 
 # --- 下载 ---
 TARBALL="cc-planet-${TAG}.tar.gz"
 DOWNLOAD_URL="${DOWNLOAD_BASE}/${TAG}/${TARBALL}"
-echo -e "${CYAN}📥 下载 ${TARBALL} ...${NC}"
-echo -e "   地址: ${CYAN}$DOWNLOAD_URL${NC}"
+echo -e "${CYAN}📥 下载 ...${NC}"
 
 TMP_DIR=$(mktemp -d)
 trap "rm -rf '$TMP_DIR'" EXIT
@@ -77,52 +99,33 @@ if [[ "$HTTP_CODE" != "200" ]]; then
         exit 1
     fi
     chmod +x "$TMP_DIR/$BINARY"
-    EXTRACTED="$TMP_DIR"
+    SRC="$TMP_DIR/$BINARY"
 else
-    echo -e "${CYAN}📦 解压 ${TARBALL} ...${NC}"
+    echo -e "${CYAN}📦 解压 ...${NC}"
     tar -xzf "$TMP_DIR/$TARBALL" -C "$TMP_DIR"
-    EXTRACTED="$TMP_DIR/cc-planet-${TAG}"
+    SRC="$TMP_DIR/cc-planet-${TAG}/$BINARY"
 fi
 
 # --- 安装 ---
-echo -e "${CYAN}📦 安装到 $INSTALL_BASE ...${NC}"
+echo -e "${CYAN}📦 安装到 $INSTALL_PATH ...${NC}"
 
-# 备份旧目录
-if [[ -d "$INSTALL_BASE" ]]; then
-    BACKUP="${INSTALL_BASE}.bak.$(date +%Y%m%d%H%M%S)"
-    echo -e "${YELLOW}   ⚠️  备份旧版本: $BACKUP${NC}"
-    mv "$INSTALL_BASE" "$BACKUP"
+INSTALL_DIR=$(dirname "$INSTALL_PATH")
+if [[ ! -d "$INSTALL_DIR" ]]; then
+    $SUDO mkdir -p "$INSTALL_DIR"
 fi
 
-mkdir -p "$INSTALL_BASE"
-
-# 复制所有文件
-cp -r "$EXTRACTED/"* "$INSTALL_BASE/"
-chmod +x "$INSTALL_BASE/$BINARY" "$INSTALL_BASE/cc-notify.py" 2>/dev/null || true
-
-echo -e "   ${GREEN}✓${NC} 安装完成:"
-for f in "$INSTALL_BASE"/*; do
-    echo -e "     $(basename "$f")"
-done
-
-# --- 检查 PATH ---
-if ! echo "$PATH" | tr ':' '\n' | grep -qx "$INSTALL_BASE"; then
-    echo ""
-    echo -e "${YELLOW}   ⚠️  $INSTALL_BASE 不在 PATH 中${NC}"
-    echo -e "   添加以下内容到 ~/.zshrc："
-    echo -e "   ${CYAN}export PATH=\"\$PATH:$INSTALL_BASE\"${NC}"
-    echo -e "   或直接运行当前 shell:"
-    echo -e "   ${CYAN}export PATH=\"\$PATH:$INSTALL_BASE\"${NC}"
-fi
+$SUDO cp "$SRC" "$INSTALL_PATH"
+$SUDO chmod +x "$INSTALL_PATH"
+echo -e "${GREEN}   ✓${NC} 安装完成"
 
 # --- 验证 ---
 echo -e "${CYAN}✅ 验证...${NC}"
 INSTALLED_PATH=$(command -v "$BINARY" || echo "")
-if [[ -n "$INSTALLED_PATH" ]]; then
+if [[ "$INSTALLED_PATH" == "$INSTALL_PATH" ]]; then
     echo -e "${GREEN}   $BINARY 已就绪: $INSTALLED_PATH${NC}"
 else
-    echo -e "${YELLOW}   请将 $INSTALL_BASE 加入 PATH:${NC}"
-    echo -e "   echo 'export PATH=\"\$PATH:$INSTALL_BASE\"' >> ~/.zshrc"
+    echo -e "${GREEN}   $BINARY 已安装到 $INSTALL_PATH${NC}"
+    echo -e "${YELLOW}   重启终端或执行: hash -r${NC}"
 fi
 
 echo ""
@@ -132,10 +135,4 @@ echo -e "   运行:"
 echo -e "     ${CYAN}$BINARY \"Hello World\"${NC}"
 echo -e "     ${CYAN}$BINARY --success \"Build passed\"${NC}"
 echo -e "     ${CYAN}$BINARY --failure \"Test failed\"${NC}"
-echo ""
-echo -e "   配置: ${CYAN}${INSTALL_BASE}/env.json${NC}"
-echo -e "   文档: ${CYAN}${INSTALL_BASE}/README.md${NC}"
-echo -e "   源码: ${CYAN}${INSTALL_BASE}/plane.png${NC}"
-echo ""
-echo -e "   CI/CD 集成 (cc-notify.py):"
-echo -e "     ${CYAN}echo '\{\"stop_reason\":\"end_turn\"}' | ${INSTALL_BASE}/cc-notify.py${NC}"
+echo -e "     ${CYAN}$BINARY --blocked \"Waiting review\"${NC}"
