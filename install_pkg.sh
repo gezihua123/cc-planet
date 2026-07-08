@@ -3,7 +3,7 @@ set -e
 
 # --- 配置 ---
 REPO="gezihua123/cc-planet"
-BINARY="fly-airplane"
+BINARY="cc-planet"
 INSTALL_BASE="${HOME}/bin/cc-plane"   # cc-notify.py 约定的路径
 DOWNLOAD_BASE="https://github.com/${REPO}/releases/download"
 
@@ -18,7 +18,7 @@ NC='\033[0m'
 usage() {
     echo "用法: ./install_pkg.sh [版本号]"
     echo ""
-    echo "从 GitHub Releases 下载并安装 fly-airplane 及配套资源"
+    echo "从 GitHub Releases 下载并安装 cc-planet 及配套资源"
     echo ""
     echo "参数:"
     echo "  版本号    可选，默认安装最新版"
@@ -55,7 +55,7 @@ else
 fi
 
 # --- 下载 ---
-TARBALL="fly-airplane-${TAG}.tar.gz"
+TARBALL="cc-planet-${TAG}.tar.gz"
 DOWNLOAD_URL="${DOWNLOAD_BASE}/${TAG}/${TARBALL}"
 echo -e "${CYAN}📥 下载 ${TARBALL} ...${NC}"
 echo -e "   地址: ${CYAN}$DOWNLOAD_URL${NC}"
@@ -79,7 +79,7 @@ if [[ "$HTTP_CODE" != "200" ]]; then
 else
     echo -e "${CYAN}📦 解压 ${TARBALL} ...${NC}"
     tar -xzf "$TMP_DIR/$TARBALL" -C "$TMP_DIR"
-    EXTRACTED="$TMP_DIR/fly-airplane-${TAG}"
+    EXTRACTED="$TMP_DIR/cc-planet-${TAG}"
 fi
 
 # --- 安装 ---

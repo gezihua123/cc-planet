@@ -1,4 +1,4 @@
-# fly-airplane — 飞行动画通知工具
+# cc-planet — 飞行动画通知工具
 
 在屏幕上显示一架拖曳横幅飞过的飞机，用于 CI/CD 构建状态通知或日常消息提醒。
 
@@ -9,8 +9,8 @@
 ./build.sh
 
 # 运行
-./fly-airplane "Hello World"
-./fly-airplane --success "Build passed"
+./cc-planet "Hello World"
+./cc-planet --success "Build passed"
 ```
 
 ---
@@ -18,7 +18,7 @@
 ## 命令行用法
 
 ```
-./fly-airplane [--success | --failure | --blocked] [<消息文本>]
+./cc-planet [--success | --failure | --blocked] [<消息文本>]
 ```
 
 ### 参数说明
@@ -34,20 +34,20 @@
 
 ```bash
 # 无状态，自定义消息
-./fly-airplane "Deploying to production"
+./cc-planet "Deploying to production"
 
 # 带状态 + 默认消息
-./fly-airplane --success
+./cc-planet --success
 # → 横幅: "✅ Build passed"
 
-./fly-airplane --failure
+./cc-planet --failure
 # → 横幅: "❌ Test failed"
 
-./fly-airplane --blocked
+./cc-planet --blocked
 # → 横幅: "⏳ Waiting review"
 
 # 带状态 + 自定义消息
-./fly-airplane --success "v2.3 deployed"
+./cc-planet --success "v2.3 deployed"
 # → 横幅: "✅ v2.3 deployed"
 ```
 
@@ -137,7 +137,7 @@
 ```yaml
 - name: Build & Notify
   run: |
-    ./fly-airplane --success "Build #${GITHUB_RUN_NUMBER} passed"
+    ./cc-planet --success "Build #${GITHUB_RUN_NUMBER} passed"
 ```
 
 ### 自定义构建脚本
@@ -145,9 +145,9 @@
 ```bash
 #!/bin/bash
 if ./build.sh; then
-    ./fly-airplane --success "Build OK"
+    ./cc-planet --success "Build OK"
 else
-    ./fly-airplane --failure "Build failed"
+    ./cc-planet --failure "Build failed"
 fi
 ```
 
@@ -159,7 +159,7 @@ fi
 ./build.sh
 ```
 
-产物：`fly-airplane`（通用二进制，支持 arm64 + x86_64，最低 macOS 11）
+产物：`cc-planet`（通用二进制，支持 arm64 + x86_64，最低 macOS 11）
 
 ### 依赖
 
@@ -175,7 +175,9 @@ fi
 ```
 ├── main.swift       # 主程序（含内置图片 base64）
 ├── build.sh         # 编译脚本
-├── release.sh       # 发布脚本（编译 → 打 tag → 推 GitHub Release）
+├── release.sh       # 发布脚本（编译 → 打包 → 推 GitHub Release）
+├── install_pkg.sh   # 安装脚本（从 GitHub Release 下载安装）
+├── cc-notify.py     # CI/CD 通知辅助脚本
 ├── env.json         # 运行时配置（可选）
 └── plane.png        # 原始图片源文件
 ```

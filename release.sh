@@ -84,14 +84,14 @@ echo -e "${GREEN}✅ 构建成功${NC}"
 # --- 打包所有资源 ---
 echo -e "${CYAN}📦 打包资源...${NC}"
 
-PKG_NAME="fly-airplane-${NEW_TAG}"
+PKG_NAME="cc-planet-${NEW_TAG}"
 PKG_DIR=$(mktemp -d)
 PKG_DIR="${PKG_DIR}/${PKG_NAME}"
 mkdir -p "$PKG_DIR"
 
 # 需要打包的文件清单
 FILES_TO_PACK=(
-    "fly-airplane"
+    "cc-planet"
     "env.json"
     "cc-notify.py"
     "plane.png"
@@ -139,7 +139,7 @@ cat > "$RELEASE_NOTES" <<-EOF
 ### 包含文件
 | 文件 | 说明 |
 |------|------|
-| \`fly-airplane\` | 主程序（通用二进制） |
+| \`cc-planet\` | 主程序（通用二进制） |
 | \`env.json\` | 运行时配置模板 |
 | \`cc-notify.py\` | CI/CD 通知辅助脚本 |
 | \`plane.png\` | 飞机图片源文件 |
@@ -154,13 +154,13 @@ curl -fsSL https://github.com/$REPO/releases/download/$NEW_TAG/$TARBALL | tar -x
 cd $PKG_NAME
 
 # 运行
-./fly-airplane "Hello World"
+./cc-planet "Hello World"
 \`\`\`
 EOF
 
 # 上传 tarball + 裸二进制
 UPLOAD_ARGS=()
-for f in "$TARBALL" "fly-airplane"; do
+for f in "$TARBALL" "cc-planet"; do
     [[ -f "$f" ]] && UPLOAD_ARGS+=("$f")
 done
 

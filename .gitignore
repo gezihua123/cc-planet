@@ -1,9 +1,8 @@
 # Build products
 /build
 /build.*
-.fly-airplane
-fly-airplane
-fly-airplane-*
+cc-planet
+cc-planet-*
 
 # Swift Package Manager
 /.build

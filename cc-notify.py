@@ -7,7 +7,7 @@ import subprocess
 import os
 
 BASE = os.path.expanduser("~/bin/cc-plane")
-BINARY = os.path.join(BASE, "fly-airplane")
+BINARY = os.path.join(BASE, "cc-planet")
 MAX_MSG = 24
 
 
@@ -20,7 +20,7 @@ def truncate(s: str) -> str:
 def fly(message: str):
     """触发飞机（防并发）"""
     r = subprocess.run(
-        ["pgrep", "-f", "cc-plane/fly-airplane"],
+        ["pgrep", "-f", "cc-plane/cc-planet"],
         capture_output=True, text=True,
     )
     if r.stdout.strip():
