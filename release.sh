@@ -96,6 +96,8 @@ FILES_TO_PACK=(
     "cc-notify.py"
     "plane.png"
     "README.md"
+    "SKILL.md"
+    "install_pkg.sh"
 )
 
 for file in "${FILES_TO_PACK[@]}"; do
