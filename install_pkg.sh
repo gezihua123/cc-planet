@@ -105,13 +105,14 @@ for f in "$INSTALL_BASE"/*; do
     echo -e "     $(basename "$f")"
 done
 
-# --- 可选：创建符号链接到 PATH ---
-if command -v "$BINARY" &>/dev/null; then
-    echo -e "${YELLOW}   ⚠️  检测到系统已有 $BINARY: $(command -v $BINARY)${NC}"
-else
-    echo -e "${CYAN}   🔗 创建符号链接 /usr/local/bin/${BINARY} ...${NC}"
-    sudo ln -sf "$INSTALL_BASE/$BINARY" "/usr/local/bin/$BINARY"
-    echo -e "   ${GREEN}✓${NC} $BINARY 已加入 PATH"
+# --- 检查 PATH ---
+if ! echo "$PATH" | tr ':' '\n' | grep -qx "$INSTALL_BASE"; then
+    echo ""
+    echo -e "${YELLOW}   ⚠️  $INSTALL_BASE 不在 PATH 中${NC}"
+    echo -e "   添加以下内容到 ~/.zshrc："
+    echo -e "   ${CYAN}export PATH=\"\$PATH:$INSTALL_BASE\"${NC}"
+    echo -e "   或直接运行当前 shell:"
+    echo -e "   ${CYAN}export PATH=\"\$PATH:$INSTALL_BASE\"${NC}"
 fi
 
 # --- 验证 ---

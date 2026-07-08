@@ -10,7 +10,7 @@
 curl -fsSL https://raw.githubusercontent.com/gezihua123/cc-planet/main/install_pkg.sh | bash
 ```
 
-脚本会自动下载最新 Release 并安装到 `~/bin/cc-plane/`，同时创建 `/usr/local/bin/cc-planet` 符号链接。
+脚本会自动下载最新 Release 并安装到 `~/bin/cc-plane/`，无需 sudo。
 
 ### 方式二：手动下载
 
