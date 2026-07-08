@@ -4,10 +4,10 @@ set -e
 cd "$(dirname "$0")"
 
 # --- 配置 ---
-REMOTE="origin"                    # git remote 名称
-BRANCH="main"                      # 目标分支
-DEFAULT_BUMP="patch"               # 默认版本递增: major / minor / patch
-REPO="gezihua123/cc-planet"        # GitHub 仓库
+REMOTE="origin"
+BRANCH="main"
+DEFAULT_BUMP="patch"
+REPO="gezihua123/cc-planet"
 
 # --- 颜色 ---
 RED='\033[0;31m'
@@ -32,9 +32,7 @@ usage() {
     exit 0
 }
 
-if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-    usage
-fi
+[[ "$1" == "-h" || "$1" == "--help" ]] && usage
 
 BUMP="${1:-$DEFAULT_BUMP}"
 
@@ -58,7 +56,7 @@ if ! git remote get-url "$REMOTE" &>/dev/null; then
     exit 1
 fi
 
-# --- 获取最新版本 tag ---
+# --- 版本号 ---
 LATEST_TAG=$(git tag --sort=-v:refname | head -n 1)
 if [[ -z "$LATEST_TAG" ]]; then
     echo -e "${YELLOW}⚠️  没有找到已有 tag，从 v0.0.0 开始${NC}"
@@ -66,20 +64,14 @@ if [[ -z "$LATEST_TAG" ]]; then
 fi
 echo -e "   最新 tag: ${CYAN}$LATEST_TAG${NC}"
 
-# --- 解析并递增版本号 ---
 VERSION="${LATEST_TAG#v}"
 IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
 
 case "$BUMP" in
-    major)
-        MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
-    minor)
-        MINOR=$((MINOR + 1)); PATCH=0 ;;
-    patch)
-        PATCH=$((PATCH + 1)) ;;
-    *)
-        echo -e "${RED}❌ 无效的 bump_type: $BUMP（可选: major / minor / patch）${NC}"
-        exit 1 ;;
+    major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+    minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+    patch) PATCH=$((PATCH + 1)) ;;
+    *) echo -e "${RED}❌ 无效 bump_type: $BUMP（可选: major / minor / patch）${NC}"; exit 1 ;;
 esac
 
 NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
@@ -89,7 +81,7 @@ echo -e "${CYAN}🔨 构建项目...${NC}"
 ./build.sh
 echo -e "${GREEN}✅ 构建成功${NC}"
 
-# --- 打包资源 ---
+# --- 打包所有资源 ---
 echo -e "${CYAN}📦 打包资源...${NC}"
 
 PKG_NAME="fly-airplane-${NEW_TAG}"
@@ -97,27 +89,33 @@ PKG_DIR=$(mktemp -d)
 PKG_DIR="${PKG_DIR}/${PKG_NAME}"
 mkdir -p "$PKG_DIR"
 
-# 复制二进制
-cp fly-airplane "$PKG_DIR/"
+# 需要打包的文件清单
+FILES_TO_PACK=(
+    "fly-airplane"
+    "env.json"
+    "cc-notify.py"
+    "plane.png"
+    "README.md"
+)
 
-# 复制 env.json（仅打包，不提交到 git）
-if [[ -f env.json ]]; then
-    cp env.json "$PKG_DIR/"
-    echo -e "   ${GREEN}✓${NC} env.json"
-else
-    echo -e "   ${YELLOW}⚠️  env.json 不存在，跳过${NC}"
-fi
+for file in "${FILES_TO_PACK[@]}"; do
+    if [[ -f "$file" ]]; then
+        cp "$file" "$PKG_DIR/"
+        echo -e "   ${GREEN}✓${NC} $file"
+    else
+        echo -e "   ${YELLOW}⚠️  $file 不存在，跳过${NC}"
+    fi
+done
 
 # 打包
 TARBALL="${PKG_NAME}.tar.gz"
 tar -C "$(dirname "$PKG_DIR")" -czf "$TARBALL" "$PKG_NAME"
 
 echo -e "   ${GREEN}✓${NC} 打包完成: ${CYAN}$TARBALL${NC}"
-echo -e "   包含: fly-airplane env.json"
+tar -tzf "$TARBALL" | sed 's/^/     /'
 
 # --- 提交 & 打 tag ---
 echo -e "${CYAN}🏷️  创建发布 $NEW_TAG ...${NC}"
-
 git add -A
 git commit --allow-empty -m "release $NEW_TAG"
 git tag -a "$NEW_TAG" -m "release $NEW_TAG"
@@ -137,30 +135,33 @@ cat > "$RELEASE_NOTES" <<-EOF
 ### 构建信息
 - 平台: macOS 11+
 - 架构: arm64 + x86_64 (Universal Binary)
-- 文件: \`fly-airplane\` + \`env.json\`
 
-### 安装
+### 包含文件
+| 文件 | 说明 |
+|------|------|
+| \`fly-airplane\` | 主程序（通用二进制） |
+| \`env.json\` | 运行时配置模板 |
+| \`cc-notify.py\` | CI/CD 通知辅助脚本 |
+| \`plane.png\` | 飞机图片源文件 |
+| \`README.md\` | 使用文档 |
+
+### 快速安装
 \`\`\`bash
+# 下载完整包
 curl -fsSL https://github.com/$REPO/releases/download/$NEW_TAG/$TARBALL | tar -xz
-\`\`\`
 
-或直接下载二进制：
-\`\`\`bash
-curl -fsSL https://github.com/$REPO/releases/download/$NEW_TAG/fly-airplane -o fly-airplane && chmod +x fly-airplane
-\`\`\`
+# 进入目录
+cd $PKG_NAME
 
-### 使用
-\`\`\`bash
-./fly-airplane [--success | --failure | --blocked] [<消息文本>]
+# 运行
+./fly-airplane "Hello World"
 \`\`\`
 EOF
 
-ASSETS=("$TARBALL" "fly-airplane")
+# 上传 tarball + 裸二进制
 UPLOAD_ARGS=()
-for asset in "${ASSETS[@]}"; do
-    if [[ -f "$asset" ]]; then
-        UPLOAD_ARGS+=("$asset")
-    fi
+for f in "$TARBALL" "fly-airplane"; do
+    [[ -f "$f" ]] && UPLOAD_ARGS+=("$f")
 done
 
 if gh release create "$NEW_TAG" \
@@ -171,7 +172,7 @@ if gh release create "$NEW_TAG" \
     echo -e "${GREEN}✅ Release 已创建: https://github.com/$REPO/releases/tag/$NEW_TAG${NC}"
 else
     rm -f "$RELEASE_NOTES"
-    echo -e "${YELLOW}⚠️  gh release 创建失败，请手动创建 Release${NC}"
+    echo -e "${YELLOW}⚠️  gh release 创建失败，请手动创建${NC}"
     exit 1
 fi
 
@@ -183,4 +184,6 @@ echo ""
 echo -e "${GREEN}✅ 发布完成: ${NEW_TAG}${NC}"
 echo -e "${GREEN}   代码已推送到 $REMOTE/$BRANCH${NC}"
 echo -e "${GREEN}   产物已上传至 GitHub Release${NC}"
-echo -e "${GREEN}   安装命令: curl -fsSL https://github.com/$REPO/releases/download/$NEW_TAG/${TARBALL} | tar -xz${NC}"
+echo ""
+echo -e "   安装命令:"
+echo -e "   ${CYAN}curl -fsSL https://github.com/$REPO/releases/download/$NEW_TAG/$TARBALL | tar -xz${NC}"
