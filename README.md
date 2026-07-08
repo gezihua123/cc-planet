@@ -175,6 +175,7 @@ fi
 ```
 ├── main.swift       # 主程序（含内置图片 base64）
 ├── build.sh         # 编译脚本
+├── release.sh       # 发布脚本（编译 → 打 tag → 推 GitHub Release）
 ├── env.json         # 运行时配置（可选）
 └── plane.png        # 原始图片源文件
 ```
