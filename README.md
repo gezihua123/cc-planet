@@ -2,6 +2,35 @@
 
 在屏幕上显示一架拖曳横幅飞过的飞机，用于 CI/CD 构建状态通知或日常消息提醒。
 
+## 安装
+
+### 方式一：安装脚本（推荐）
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/gezihua123/cc-planet/main/install_pkg.sh | bash
+```
+
+脚本会自动下载最新 Release 并安装到 `~/bin/cc-plane/`，同时创建 `/usr/local/bin/cc-planet` 符号链接。
+
+### 方式二：手动下载
+
+```bash
+# 下载最新版 tarball
+curl -fsSL https://api.github.com/repos/gezihua123/cc-planet/releases/latest \
+  | grep tarball_url \
+  | cut -d '"' -f 4 \
+  | wget -O - -qi - \
+  | tar -xz
+```
+
+或直接访问 [Releases 页面](https://github.com/gezihua123/cc-planet/releases) 下载 `cc-planet-*.tar.gz`。
+
+### 方式三：从源码编译
+
+```bash
+./build.sh
+```
+
 ## 快速开始
 
 ```bash

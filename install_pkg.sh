@@ -6,6 +6,7 @@ REPO="gezihua123/cc-planet"
 BINARY="cc-planet"
 INSTALL_BASE="${HOME}/bin/cc-plane"   # cc-notify.py 约定的路径
 DOWNLOAD_BASE="https://github.com/${REPO}/releases/download"
+DEFAULT_VERSION="v0.0.3"              # 发布时自动更新，API 不可用时回退
 
 # --- 颜色 ---
 RED='\033[0;31m'
@@ -44,14 +45,15 @@ if [[ -n "$1" ]]; then
     echo -e "   指定版本: ${CYAN}$TAG${NC}"
 else
     echo -e "   获取最新版本..."
-    TAG=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
+    TAG=$(curl -fsSL --connect-timeout 5 "https://api.github.com/repos/$REPO/releases/latest" \
         | grep '"tag_name"' \
         | sed 's/.*"tag_name": "\(.*\)",/\1/')
     if [[ -z "$TAG" ]]; then
-        echo -e "${RED}❌ 无法获取最新版本，请检查网络或手动指定版本${NC}"
-        exit 1
+        TAG="$DEFAULT_VERSION"
+        echo -e "${YELLOW}   ⚠️  API 不可用，使用默认版本 ${CYAN}$TAG${NC}"
+    else
+        echo -e "   最新版本: ${CYAN}$TAG${NC}"
     fi
-    echo -e "   最新版本: ${CYAN}$TAG${NC}"
 fi
 
 # --- 下载 ---

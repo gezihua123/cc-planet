@@ -158,18 +158,23 @@ cd $PKG_NAME
 \`\`\`
 EOF
 
-# 上传 tarball + 裸二进制
-UPLOAD_ARGS=()
-for f in "$TARBALL" "cc-planet"; do
-    [[ -f "$f" ]] && UPLOAD_ARGS+=("$f")
-done
-
+# 上传 tarball
 if gh release create "$NEW_TAG" \
     --title "$NEW_TAG" \
     --notes-file "$RELEASE_NOTES" \
-    "${UPLOAD_ARGS[@]}"; then
+    "$TARBALL"; then
     rm -f "$RELEASE_NOTES"
     echo -e "${GREEN}✅ Release 已创建: https://github.com/$REPO/releases/tag/$NEW_TAG${NC}"
+
+    # --- 更新 install_pkg.sh 默认版本号 ---
+    echo -e "${CYAN}📝 更新 install_pkg.sh 默认版本号...${NC}"
+    sed -i '' "s/^DEFAULT_VERSION=\".*\"/DEFAULT_VERSION=\"$NEW_TAG\"/" install_pkg.sh
+    echo -e "   DEFAULT_VERSION -> ${CYAN}$NEW_TAG${NC}"
+
+    git add install_pkg.sh
+    git commit -m "bump install_pkg.sh default version to $NEW_TAG"
+    git push "$REMOTE" "$BRANCH"
+    echo -e "${GREEN}✅ install_pkg.sh 版本号已提交推送${NC}"
 else
     rm -f "$RELEASE_NOTES"
     echo -e "${YELLOW}⚠️  gh release 创建失败，请手动创建${NC}"
