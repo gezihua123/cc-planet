@@ -32,49 +32,6 @@ def fly(message: str):
     )
 
 
-def extract_last_message(transcript_path: str) -> str:
-    """从 transcript 文件提取最后一条 assistant 消息"""
-    try:
-        with open(transcript_path, "r") as f:
-            # 读取最后 100 行即可
-            lines = f.readlines()[-100:]
-    except Exception:
-        return ""
-
-    for line in reversed(lines):
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            msg = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if msg.get("type") != "assistant":
-            continue
-
-        message = msg.get("message", {})
-        content = message.get("content", [])
-        text = ""
-        if isinstance(content, list):
-            for block in content:
-                if isinstance(block, dict) and block.get("type") == "text":
-                    text += block.get("text", "") + " "
-        elif isinstance(content, str):
-            text = content
-
-        # 清理 markdown 语法
-        text = re.sub(r"```[^`]*```", "", text)
-        text = re.sub(r"`([^`]+)`", r"\1", text)
-        text = text.replace("\n", " ").replace("\r", " ")
-        text = re.sub(r"\s+", " ", text).strip()
-        # 留余量给 "✅ " 前缀和 "…" 后缀
-        if len(text) > 24:
-            text = text[:24] + "..."
-        if text:
-            return text
-    return ""
-
-
 def handle_pre_tool_use(data: dict):
     """PreToolUse 事件"""
     tool = data.get("tool_name", "")
@@ -89,13 +46,15 @@ def handle_pre_tool_use(data: dict):
 
 
 def handle_stop(data: dict):
-    """Stop 事件 - 提取最后一条消息并通知"""
-    tp = data.get("transcript_path", "")
-    if not tp or not os.path.isfile(tp):
-        return
-    last = extract_last_message(tp)
+    """Stop 事件 - 使用直接传入的 last_assistant_message 通知"""
+    last = data.get("last_assistant_message", "").strip()
     if last:
-        fly(truncate(f"✅ {last}"))
+        # 清理 markdown 语法
+        text = re.sub(r"```[^`]*```", "", last)
+        text = re.sub(r"`([^`]+)`", r"\1", text)
+        text = text.replace("\n", " ").replace("\r", " ")
+        text = re.sub(r"\s+", " ", text).strip()
+        fly(truncate(f"✅ {text}"))
 
 
 def main():
