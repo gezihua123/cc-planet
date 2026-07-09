@@ -5,7 +5,7 @@ set -e
 REPO="gezihua123/cc-planet"
 BINARY="cc-planet"
 DOWNLOAD_BASE="https://github.com/${REPO}/releases/download"
-DEFAULT_VERSION="v0.0.6"              # 发布时自动更新，API 不可用时回退
+DEFAULT_VERSION="v0.0.7"              # 发布时自动更新，API 不可用时回退
 
 # --- 颜色 ---
 RED='\033[0;31m'
