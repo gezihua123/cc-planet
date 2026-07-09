@@ -83,6 +83,13 @@ echo -e "${CYAN}📝 更新 $VERSION_FILE ...${NC}"
 echo "VERSION=$NEW_VERSION" > "$VERSION_FILE"
 echo -e "   ${GREEN}✓${NC} $VERSION_FILE: ${CYAN}$NEW_VERSION${NC}"
 
+# --- 优先提交版本号并推送 ---
+echo -e "${CYAN}🚀 提交版本号并推送...${NC}"
+git add "$VERSION_FILE"
+git commit -m "bump version to $NEW_TAG"
+git push "$REMOTE" "$BRANCH"
+echo -e "${GREEN}✅ 版本号已推送: ${CYAN}$NEW_TAG${NC}"
+
 # --- 构建 ---
 echo -e "${CYAN}🔨 构建项目...${NC}"
 ./build.sh
@@ -122,15 +129,12 @@ tar -C "$(dirname "$PKG_DIR")" -czf "$TARBALL" "$PKG_NAME"
 echo -e "   ${GREEN}✓${NC} 打包完成: ${CYAN}$TARBALL${NC}"
 tar -tzf "$TARBALL" | sed 's/^/     /'
 
-# --- 提交 & 打 tag ---
-echo -e "${CYAN}🏷️  创建发布 $NEW_TAG ...${NC}"
-git add -A
-git commit --allow-empty -m "release $NEW_TAG"
+# --- 打 tag ---
+echo -e "${CYAN}🏷️  打 tag $NEW_TAG ...${NC}"
 git tag -a "$NEW_TAG" -m "release $NEW_TAG"
 
-# --- 推送到 GitHub ---
-echo -e "${CYAN}🚀 推送到 GitHub ($REMOTE/$BRANCH) ...${NC}"
-git push "$REMOTE" "$BRANCH"
+# --- 推送到 GitHub（tag + 构建产物记录） ---
+echo -e "${CYAN}🚀 推送 tag 到 GitHub ...${NC}"
 git push "$REMOTE" "$NEW_TAG"
 
 # --- 创建 GitHub Release & 上传产物 ---
