@@ -92,7 +92,7 @@ cc-planet --blocked "Waiting review"
 ### Claude Code 集成
 
 ```bash
-echo '{"stop_reason":"end_turn"}' | ~/bin/cc-plane/cc-notify.py
+echo '{"stop_reason":"end_turn"}' | ~/bin/cc-plane/cc-planet --json
 ```
 
 ## 发布
@@ -113,11 +113,10 @@ echo '{"stop_reason":"end_turn"}' | ~/bin/cc-plane/cc-notify.py
 ## 项目结构
 
 ```
-├── main.swift       # 主程序
+├── main.swift       # 主程序（含内置图片 + 通知事件处理）
 ├── build.sh         # 编译脚本
-├── release.sh       # 发布脚本
-├── install_pkg.sh   # 安装脚本
-├── cc-notify.py     # CI/CD 通知辅助
+├── release.sh       # 发布脚本（编译 → 打包 → 推 GitHub Release）
+├── install_pkg.sh   # 安装脚本（从 GitHub Release 下载安装，含 cc-notify 符号链接）
 ├── env.json         # 运行时配置模板
 └── plane.png        # 飞机图片源文件
 ```

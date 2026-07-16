@@ -106,9 +106,9 @@ mkdir -p "$PKG_DIR"
 FILES_TO_PACK=(
     "cc-planet"
     "env.json"
-    "cc-notify.py"
     "plane.png"
     "README.md"
+    "README.en.md"
     "SKILL.md"
     "install_pkg.sh"
     "version.properties"
@@ -154,11 +154,11 @@ cat > "$RELEASE_NOTES" <<-EOF
 |------|------|
 | \`cc-planet\` | 主程序（通用二进制） |
 | \`env.json\` | 运行时配置模板 |
-| \`cc-notify.py\` | CI/CD 通知辅助脚本 |
 | \`plane.png\` | 飞机图片源文件 |
-| \`README.md\` | 使用文档 |
+| \`README.md\` | 使用文档（中文） |
+| \`README.en.md\` | 使用文档（英文） |
 | \`SKILL.md\` | 技能文档 |
-| \`install_pkg.sh\` | 安装脚本 |
+| \`install_pkg.sh\` | 安装脚本（自动创建 cc-notify 符号链接） |
 | \`version.properties\` | 版本号配置 |
 
 ### 快速安装
