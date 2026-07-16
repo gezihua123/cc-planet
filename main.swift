@@ -148,6 +148,12 @@ func handleNotifyJSON() -> String? {
     return nil
 }
 
+// 自定义窗口：只显示不抢焦点
+class NonFocusableWindow: NSWindow {
+    override var canBecomeKey: Bool { false }
+    override var canBecomeMain: Bool { false }
+}
+
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)
 // 不激活 app，避免抢占键盘焦点和鼠标焦点
@@ -236,8 +242,8 @@ if args.count > 1 {
 }
 
 // ========== 画布 ==========
-let canvas = NSWindow(contentRect: NSRect(x: 0, y: 0, width: sw, height: sh),
-                      styleMask: [.borderless], backing: .buffered, defer: false)
+let canvas = NonFocusableWindow(contentRect: NSRect(x: 0, y: 0, width: sw, height: sh),
+                                styleMask: [.borderless], backing: .buffered, defer: false)
 canvas.isOpaque = false; canvas.backgroundColor = .clear
 canvas.level = .popUpMenu
 canvas.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
