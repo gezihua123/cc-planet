@@ -1,41 +1,41 @@
-# cc-planet — 飞行动画通知工具
+# cc-planet — Flying Banner Notification Tool
 
-在屏幕上显示一架拖曳横幅飞过的飞机，用于 CI/CD 构建状态通知或日常消息提醒。
+Displays an airplane flying across the screen with a trailing banner, designed for CI/CD build status notifications and daily reminders.
 
 ![demo](assets/demo.gif)
 
-## 安装
+## Installation
 
-### 方式一：安装脚本（推荐）
+### Option 1: Install Script (Recommended)
 
-一行命令即可完成安装，自动安装到 `/usr/local/bin/`。
+One command to install — always goes to `/usr/local/bin/`.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/gezihua123/cc-planet/main/install_pkg.sh | bash
 ```
 
-脚本会自动：
-1. 检测系统架构（arm64 / x86_64）
-2. 从 GitHub Releases 下载最新版二进制
-3. 安装到 `/usr/local/bin/`
-4. 创建 `cc-notify` → `cc-planet` 符号链接（兼容旧 hook）
-5. 验证安装是否成功
+The script will automatically:
+1. Detect system architecture (arm64 / x86_64)
+2. Download the latest binary from GitHub Releases
+3. Install to `/usr/local/bin/`
+4. Create a `cc-notify` → `cc-planet` symlink (backward compatibility)
+5. Verify the installation
 
-> 安装使用 `sudo` 写入 `/usr/local/bin/`，如遇权限提示请输入密码。
+> Installation uses `sudo` to write to `/usr/local/bin/`. Enter your password if prompted.
 
-### 卸载
+### Uninstall
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/gezihua123/cc-planet/main/install_pkg.sh | bash -s -- --uninstall
 ```
 
-卸载脚本会自动删除 `cc-planet` 二进制及 `cc-notify` 符号链接。
+The uninstall script removes both the `cc-planet` binary and the `cc-notify` symlink.
 
-### 方式二：手动下载
+### Option 2: Manual Download
 
-直接访问 [Releases 页面](https://github.com/gezihua123/cc-planet/releases) 下载 `cc-planet-*.tar.gz`，解压后即可使用。
+Go to the [Releases page](https://github.com/gezihua123/cc-planet/releases) and download `cc-planet-*.tar.gz`, then extract and use directly.
 
-### 方式三：从源码编译
+### Option 3: Build from Source
 
 ```bash
 git clone git@github.com:gezihua123/cc-planet.git
@@ -43,87 +43,87 @@ cd cc-planet
 ./build.sh
 ```
 
-产物：`cc-planet`（通用二进制，支持 arm64 + x86_64，最低 macOS 11）
+Output: `cc-planet` (Universal Binary, arm64 + x86_64, macOS 11+)
 
-## 快速开始
+## Quick Start
 
 ```bash
-# 编译
+# Build
 ./build.sh
 
-# 运行
+# Run
 ./cc-planet "Hello World"
 ./cc-planet --success "Build passed"
 ```
 
 ---
 
-## 命令行用法
+## Usage
 
 ```
-./cc-planet [--success | --failure | --blocked] [<消息文本>]
-./cc-planet --notify <消息>
+./cc-planet [--success | --failure | --blocked] [<message>]
+./cc-planet --notify <message>
 echo '<json>' | ./cc-planet --json
 ```
 
-### 参数说明
+### Flags
 
-| 参数 | 说明 |
-|------|------|
-| `--success` | 成功状态（✅ 绿色主题图片） |
-| `--failure` | 失败状态（❌ 红色主题图片） |
-| `--blocked` | 阻塞状态（⏳ 黄色主题图片） |
-| `--notify <消息>` | 通知模式，显示纯文本横幅（防并发） |
-| `--json` | 从 stdin 读取 JSON 事件并解析通知 |
-| `<消息文本>` | 可选。显示在飞机横幅上的文字（限 22 字） |
+| Flag | Description |
+|------|-------------|
+| `--success` | Success status (✅ green theme) |
+| `--failure` | Failure status (❌ red theme) |
+| `--blocked` | Blocked status (⏳ yellow theme) |
+| `--notify <message>` | Notification mode, plain text banner (concurrent-safe) |
+| `--json` | Read JSON events from stdin and parse notifications |
+| `<message>` | Optional. Text displayed on the airplane banner (max 22 chars) |
 
-### 示例
+### Examples
 
 ```bash
-# 无状态，自定义消息
+# No status, custom message
 ./cc-planet "Deploying to production"
 
-# 带状态 + 默认消息
+# Status with default message
 ./cc-planet --success
-# → 横幅: "✅ Build passed"
+# → Banner: "✅ Build passed"
 
 ./cc-planet --failure
-# → 横幅: "❌ Test failed"
+# → Banner: "❌ Test failed"
 
 ./cc-planet --blocked
-# → 横幅: "⏳ Waiting review"
+# → Banner: "⏳ Waiting review"
 
-# 带状态 + 自定义消息
+# Status with custom message
 ./cc-planet --success "v2.3 deployed"
-# → 横幅: "✅ v2.3 deployed"
+# → Banner: "✅ v2.3 deployed"
 
-# 通知模式（防并发，适合 CI/CD 钩子）
+# Notification mode (concurrent-safe, ideal for CI/CD hooks)
 ./cc-planet --notify "Something happened"
 
-# 从 JSON 事件解析通知（取代旧版 cc-notify）
-echo '{"last_assistant_message":"完成","stop_reason":"stop"}' | ./cc-planet --json
+# Parse JSON events (replaces legacy cc-notify)
+echo '{"last_assistant_message":"Done","stop_reason":"stop"}' | ./cc-planet --json
 
-# 处理 AskUserQuestion 事件
+# Process AskUserQuestion events
 ./cc-planet --json < events.json
 ```
 
 ---
 
-## `env.json` 配置
+## `env.json` Configuration
 
-通过 `env.json` 自定义每个状态的图片、emoji 和默认文案。程序启动时依次从**当前目录**和**二进制所在目录**查找 `env.json`。
+Customize images, emoji, and default text per status via `env.json`. The program searches for `env.json` in the **current directory** and the **binary's directory** at startup.
 
-### 字段说明
+### Fields
 
-每个状态可以配置三项：
+Each status can be configured with three fields:
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `image` | string (路径) | 飞机图片 PNG 路径，绝对路径或相对路径 |
-| `emoji` | string | 消息横幅前缀 emoji，例如 `"✅"` |
-| `prompt` | string | 该状态的默认消息文本 |
+| Field | Type | Description |
+|-------|------|-------------|
+| `image` | string (path) | Airplane PNG path, absolute or relative |
+| `emoji` | string | Banner prefix emoji, e.g. `"✅"` |
+| `prompt` | string | Default message text for this status |
 
-### 示例配置
+### Example Config
 
 ```json
 {
@@ -150,19 +150,19 @@ echo '{"last_assistant_message":"完成","stop_reason":"stop"}' | ./cc-planet --
 }
 ```
 
-### 消息组装规则
+### Message Assembly Rules
 
 ```
-最终横幅 = [状态 emoji] + [自定义消息 | 状态默认 prompt]
+Final Banner = [Status Emoji] + [Custom Message | Status Default Prompt]
 ```
 
-- 指定 `--success` + 自定义消息 → `"✅ Deployed to prod"`
-- 指定 `--success` + 无自定义消息 → `"✅ Build passed"`（使用 `prompt`）
-- 无 emoji 配置 → 横幅不显示 emoji
+- `--success` + custom message → `"✅ Deployed to prod"`
+- `--success` + no custom message → `"✅ Build passed"` (uses `prompt`)
+- No emoji configured → banner shows no emoji
 
-### 兼容旧格式
+### Legacy Format Compatibility
 
-`env.json` 兼容旧版纯字符串写法，以下格式仍然支持：
+`env.json` supports legacy string-only format:
 
 ```json
 {
@@ -171,22 +171,22 @@ echo '{"last_assistant_message":"完成","stop_reason":"stop"}' | ./cc-planet --
 }
 ```
 
-### 图片加载优先级
+### Image Load Priority
 
 ```
-指定状态的 image → default 的 image → 顶层 image（旧版）→ 编译时嵌入的内置图片
+Status-specific image → default image → top-level image (legacy) → Built-in compiled image
 ```
 
-### 搜索路径
+### Search Paths
 
-`env.json` 搜索顺序（先找到的生效）：
+`env.json` search order (first found wins):
 
-1. 进程当前工作目录（`FileManager.currentDirectoryPath`）
-2. 可执行文件所在目录（`argv[0]` 的父目录）
+1. Process current working directory (`FileManager.currentDirectoryPath`)
+2. Executable directory (parent of `argv[0]`)
 
 ---
 
-## CI/CD 集成
+## CI/CD Integration
 
 ### GitHub Actions
 
@@ -196,7 +196,7 @@ echo '{"last_assistant_message":"完成","stop_reason":"stop"}' | ./cc-planet --
     ./cc-planet --success "Build #${GITHUB_RUN_NUMBER} passed"
 ```
 
-### 自定义构建脚本
+### Custom Build Script
 
 ```bash
 #!/bin/bash
@@ -207,19 +207,19 @@ else
 fi
 ```
 
-### Claude Code 集成
+### Claude Code Integration
 
-当 Claude Code 会话结束时收到通知：
+Get notified when a Claude Code session finishes:
 
 ```bash
-echo '{"last_assistant_message":"任务完成","stop_reason":"stop"}' | ./cc-planet --json
+echo '{"last_assistant_message":"Task complete","stop_reason":"stop"}' | ./cc-planet --json
 ```
 
 ---
 
-## cc-notify 符号链接
+## cc-notify Symbolic Link
 
-`cc-notify` 是 `cc-planet` 的符号链接（安装时自动创建），用于兼容旧版 hook 调用。
+`cc-notify` is a symbolic link to `cc-planet` (created automatically during installation), providing backward compatibility for legacy hook calls.
 
 ```bash
 cc-notify "Deploying to production"
@@ -227,71 +227,71 @@ cc-notify --success "Build passed"
 echo '{"last_assistant_message":"Hello"}' | cc-notify --json
 ```
 
-> **完全等价于** `cc-planet --notify "..."` / `cc-planet --json`
+> **Fully equivalent to** `cc-planet --notify "..."` / `cc-planet --json`
 
-### 环境变量
+### Environment Variables
 
-| 变量 | 说明 |
-|------|------|
-| `CC_PLANET_BIN` | cc-planet 二进制路径 |
+| Variable | Description |
+|----------|-------------|
+| `CC_PLANET_BIN` | Path to the cc-planet binary |
 
 ---
 
-## 编译说明
+## Building
 
 ```bash
 ./build.sh
 ```
 
-产物：`cc-planet`（通用二进制，支持 arm64 + x86_64，最低 macOS 11）
+Output: `cc-planet` (Universal Binary, arm64 + x86_64, macOS 11+)
 
-### 依赖
+### Dependencies
 
 - macOS 11+
-- Swift（编译时需要，运行时不需要）
+- Swift (compile-time only, not required at runtime)
 
 ---
 
-## 发布
+## Release
 
 ```bash
-# patch 版本递增（默认）
+# Patch version bump (default)
 ./release.sh
 
-# minor 版本递增
+# Minor version bump
 ./release.sh minor
 
-# major 版本递增
+# Major version bump
 ./release.sh major
 ```
 
-发布流程：编译 → 打包资源 → 打 tag → 推 GitHub Release → 更新 install_pkg.sh
+Release workflow: Build → Package → Tag → Push GitHub Release → Update install_pkg.sh
 
 ---
 
-## 开发
+## Development
 
-### 项目结构
+### Project Structure
 
 ```
-├── main.swift       # 主程序（含内置图片 + 通知事件处理）
-├── build.sh         # 编译脚本
-├── release.sh       # 发布脚本（编译 → 打包 → 推 GitHub Release）
-├── install_pkg.sh   # 安装/卸载脚本（从 GitHub Release 下载安装）
-├── env.json         # 运行时配置模板
-├── plane.png        # 原始图片源文件
-├── version.properties # 版本号配置
-├── README.md        # 中文文档
-├── README.en.md     # 英文文档
-└── SKILL.md         # Claude Code 技能描述
+├── main.swift         # Main program (built-in image + notification event handling)
+├── build.sh           # Build script
+├── release.sh         # Release script (build → package → push GitHub Release)
+├── install_pkg.sh     # Install/uninstall script (download from GitHub Release)
+├── env.json           # Runtime config template
+├── plane.png          # Source airplane image
+├── version.properties # Version configuration
+├── README.md          # English documentation (primary)
+├── readme_zh.md       # Chinese documentation
+└── SKILL.md           # Claude Code skill description
 ```
 
-### 添加新状态
+### Adding a New Status
 
-1. 在 `EnvConfig` 中添加新字段（如 `pending`）
-2. 在 `subscript(status:)` 中添加 case
-3. 在命令行解析的 `statusFlags` 集合中添加对应 flag
-4. `env.json` 中添加对应的配置组
+1. Add a new field to `EnvConfig` (e.g., `pending`)
+2. Add a case in `subscript(status:)`
+3. Add the corresponding flag to the `statusFlags` set in CLI parsing
+4. Add the config group to `env.json`
 
 ---
 
